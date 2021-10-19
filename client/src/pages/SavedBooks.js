@@ -17,9 +17,10 @@ const SavedBooks = () => {
   const [userData, setUserData] = useState({});
 
   // use this to determine if `useEffect()` hook needs to run again
-  const userDataLength = Object.keys(userData).length;
-  const [getMe, { error, data }] = useQuery(QUERY_ME);
-  const [deleteBook, { error, data }] = useMutation(DELETE_BOOK);
+  // const userDataLength = Object.keys(userData).length;
+  const { loading, data } = useQuery(QUERY_ME);
+  const [deleteBook, { error }] = useMutation(DELETE_BOOK);
+
   useEffect(() => {
     const getUserData = async () => {
       try {
@@ -28,8 +29,6 @@ const SavedBooks = () => {
         if (!token) {
           return false;
         }
-
-        const { data } = await getMe();
 
         if (!data) {
           throw new Error("something went wrong!");
@@ -42,7 +41,7 @@ const SavedBooks = () => {
     };
 
     getUserData();
-  }, [userDataLength]);
+  });
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
@@ -53,11 +52,9 @@ const SavedBooks = () => {
     }
 
     try {
-      const { data } = await deleteBook({
-        variables: { ...bookId },
-      });
+      await deleteBook({ variables: bookId });
 
-      if (!data) {
+      if (error) {
         throw new Error("something went wrong!");
       }
 
@@ -70,7 +67,7 @@ const SavedBooks = () => {
   };
 
   // if data isn't here yet, say so
-  if (!userDataLength) {
+  if (loading) {
     return <h2>LOADING...</h2>;
   }
 
